@@ -1,0 +1,15 @@
+
+addr=http://vault:8200
+
+# comment line
+# there will be two types of entries 'tls' and 'vault'
+# 'tls' connects to site
+
+# tls://<domainname:port>[number of days to give you a warning]
+# if not specified default days will come into effect.
+tls://manintheit.orgg:443[3m]                       # maintheit.org
+tls://example.com:443[300]                          # example.com
+tls://youtube.com                               # youtube.com
+
+vault://secret/data/certs/dragon/tls.crt[60]        # tls in vault
+
