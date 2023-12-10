@@ -1,11 +1,5 @@
 #!/bin/bash
 
-#declare -F get_Vault  >/dev/null || \
-#	source "$(dirname "$(realpath "${BASH_SOURCE[0]}"))"/vault
-
-export VAULT_ADDR="http://vault:8200"
-export VAULT_TOKEN="s.SJoF5FmI2941GI5Bh3um69g8"
-
 if [ -z "${VAULT_TOKEN}" ] || [ -z "${VAULT_ADDR}" ]; then
 	echo "VAULT_TOKEN and VAULT_ADDR must be specified."
 	exit 253
