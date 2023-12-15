@@ -13,16 +13,16 @@ if [ -n "${VAULT_ADDR}" ]; then
 			VAULT_TOKEN=$(vault write -field=token auth/approle/login role_id="$role_id" secret_id="$secret_id")
 			[[ $? ]] && export VAULT_TOKEN
 		else
-			>&2 echo "No more auth method to try(VAULT_TOKEN, APPROLE)"
-				exit 251
+			echo >&2 "No more auth method to try(VAULT_TOKEN, APPROLE)"
+			exit 251
 		fi
 	fi
 else
-	>&2 echo "please specify VAULT_ADDR"
+	echo >&2 "please specify VAULT_ADDR"
 	exit 252
 fi
 
-function walk(){
+function walk() {
 	_keys=$(vault kv list -format=json "${1}" | jq --raw-output '.[]')
 
 	for _key in ${_keys}; do
