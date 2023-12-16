@@ -1,12 +1,16 @@
 #!/bin/bash
 
-declare -F fetch_from_vault || source vault.sh
-#declare -F walk >/dev/null || source walk.sh
-#source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/walk
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# export -f walk || source walk.sh
-#
+declare -F fetch_from_vault >/dev/null || source "${SCRIPT_DIR}/vault.sh"
+
+declare -F fetch_from_vault >/dev/null || source "${SCRIPT_DIR}/slack.sh"
+
+SLACK_WEBHOOK="https://hooks.slack.com/services/BBB/AAA/XXX"
+
 DEFAULT_TLS_THRESHOLD=30 # 30 days
+
+message=""
 
 function help() {
 	cat <<-EOF >&2
@@ -34,9 +38,9 @@ for line in $(awk '/^(tls|vault):\/\//{print $1}' "${1}"); do
 		fi
 		SOURCE="tls"
 		SNI=$(echo "${line}" | sed -e 's/^tls:\/\///' -e 's/:.*//') # host
-		DOMAIN=$(echo "${line}" | grep -Po "(?<=tls:\/\/).*:\d+") #host:port
-		CERT=$(echo -n -Q | openssl s_client -servername "${SNI}" -connect "${DOMAIN}" 2>/dev/null | \
-		 sed -n '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/{p;/-END CERTIFICATE-/q}')
+		DOMAIN=$(echo "${line}" | grep -Po "(?<=tls:\/\/).*:\d+")   #host:port
+		CERT=$(echo -n -Q | openssl s_client -servername "${SNI}" -connect "${DOMAIN}" 2>/dev/null |
+			sed -n '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/{p;/-END CERTIFICATE-/q}')
 
 	elif [[ "${line}" =~ ^vault:\/\/.* ]]; then
 		# vault://vault:8200/secret/data/certs/dragon/tls
@@ -53,7 +57,7 @@ for line in $(awk '/^(tls|vault):\/\//{print $1}' "${1}"); do
 	fi
 
 	THRESHOLD=$(echo "${line}" | grep -Po "(?<=\[)(.*?)(?=\])" | tr -d '[:blank:]')
-	NOTAFTER=$(openssl x509 -noout -dates -in <(echo "$CERT")| awk '/notAfter=/{split($0,s,"=");print s[2]}')
+	NOTAFTER=$(openssl x509 -noout -dates -in <(echo "$CERT") | awk '/notAfter=/{split($0,s,"=");print s[2]}')
 	NOTAFTER_EPOC=$(date -d "${NOTAFTER}" +'%s')
 	if [[ "${THRESHOLD:0-1}" == "d" ]]; then
 		THRESHOLD="$((${THRESHOLD:0:-1}))"
@@ -65,7 +69,12 @@ for line in $(awk '/^(tls|vault):\/\//{print $1}' "${1}"); do
 	diff=$((("${NOTAFTER_EPOC}" - $(date '+%s')) / 86400))
 
 	if [ "${diff}" -lt "${THRESHOLD}" ]; then
-		printf "%-20s %-20s %-20s %-20s\n" "${SOURCE}" "${DOMAIN}" "${diff}" "${THRESHOLD}"
-		# printf "⚠️ SOURCE:-SNI:-ENDINDAY(s):-THRESHOLD:-\n${SOURCE}:-${DOMAIN}:-${diff}:-${THRESHOLD}" | column -s:-: -t
+		message+=$(echo "${SOURCE}\t${DOMAIN}\t${diff}\t${THRESHOLD}\n")
 	fi
 done
+
+if [ -n "$message" ]; then
+	message=$(echo -e "${message}" | column --table --table-columns SOURCE,SNI,NUMBEROFDAYSTOEXPIRE,THRESHOLD)
+	SLACK_MESSAGE="\`\`\`$message\`\`\`"
+	slack_notify "$SLACK_WEBHOOK"
+fi

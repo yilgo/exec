@@ -1,10 +1,14 @@
 #!/bin/bash
 
-if ! command -v curl >/dev/null; then
-	echo "curl does not exist, please install it first"
-fi
+for cmd in curl;
+do
+	if ! command -v "${cmd}" >/dev/null; then
+		printf "'%s' does not exist, please install it first\n" "$cmd"
+		exit 253
+	fi
+done
 
-http_req() {
+function http_req() {
 	local ERR CURL
 	# delete temp files after function retruns.
 	CURL=$(mktemp --suffix=curl) && trap "rm -f '${CURL}' '${CURL}.config' '${CURL}.payload'  '${CURL}.out'" RETURN

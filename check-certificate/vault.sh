@@ -1,5 +1,8 @@
 #!/bin/bash
-declare -F http_req >/dev/null || source http.sh
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+declare -F http_req >/dev/null || source "${SCRIPT_DIR}/http.sh"
 
 if [ -n "$VAULT_TOKEN" ]; then
 	HTTP_HEADERS="X-Vault-Token: $VAULT_TOKEN"
@@ -25,7 +28,7 @@ fi
 
 # echo $HTTP_RESPONSE
 # echo $HTTP_CODE
-function fetch_from_hcvault() {
+function fetch_from_hcvault(){
 	local vaultapi key secret
 	[[ "${VAULT_ADDR:0-1}" =~ "/" ]] && VAULT_ADDR="${VAULT_ADDR%/}"
 	vault_api="${VAULT_ADDR}/v1"

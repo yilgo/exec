@@ -1,15 +1,11 @@
-
-addr=http://vault:8200
-
 # comment line
-# there will be two types of entries 'tls' and 'vault'
-# 'tls' connects to site
+# tls:// --> connects to the website port is mandatory.
+# vault:// --> connects to the vault
+# [] --> number of days to warn. can be 'd' and 'm' if not specified number of days.
 
-# tls://<domainname:port>[number of days to give you a warning]
-# if not specified default days will come into effect.
-tls://manintheit.orgg:443[3m]                       # maintheit.org
-tls://example.com:443[300]                          # example.com
-tls://youtube.com                               # youtube.com
+# tls://manintheit.org:443[30d] --> 30 days to warn
+# tls://manintheit.org:443[2m] --> 2 months=60 days to warn
 
-vault://secret/data/certs/dragon/tls.crt[60]        # tls in vault
+tls://manintheit.org:443[2m]                        # maintheit.org
+vault://secret/data/certs/dragon/tls.crt[10d]        # tls in vault
 
