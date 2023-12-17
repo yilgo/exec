@@ -8,4 +8,3 @@
 
 tls://manintheit.org:443[2m]                        # maintheit.org
 vault://secret/data/certs/dragon/tls.crt[10d]        # tls in vault
-

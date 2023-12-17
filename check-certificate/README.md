@@ -50,7 +50,10 @@ vault://secret/data/certs/dragon/tls.crt            # tls certificate in hashico
 ```
 
 
+## TODO:
 
+* check-certificate.sh --> Add additional Vault auth methods to implement.(check walk.sh)
+* check-certificate.sh --> More informative messages.
 
 
 

@@ -6,8 +6,8 @@ declare -F http_req >/dev/null || source "${SCRIPT_DIR}/http.sh"
 
 if [ -n "$VAULT_TOKEN" ]; then
 	HTTP_HEADERS="X-Vault-Token: $VAULT_TOKEN"
-elif [ -f ~/.vault_token ]; then
-	HTTP_HEADERS="X-Vault-Token: $(cat ~/.vault_token)"
+elif [ -f ~/.vault_tokens ]; then
+	HTTP_HEADERS="X-Vault-Token: $(cat ~/.vault_tokens)"
 else
 	echo "Neither Vault Token nor Approle Set."
 	exit 252

@@ -6,8 +6,6 @@ declare -F fetch_from_vault >/dev/null || source "${SCRIPT_DIR}/vault.sh"
 
 declare -F fetch_from_vault >/dev/null || source "${SCRIPT_DIR}/slack.sh"
 
-SLACK_WEBHOOK="https://hooks.slack.com/services/BBB/AAA/XXX"
-
 DEFAULT_TLS_THRESHOLD=30 # 30 days
 
 message=""
@@ -43,12 +41,10 @@ for line in $(awk '/^(tls|vault):\/\//{print $1}' "${1}"); do
 			sed -n '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/{p;/-END CERTIFICATE-/q}')
 
 	elif [[ "${line}" =~ ^vault:\/\/.* ]]; then
-		# vault://vault:8200/secret/data/certs/dragon/tls
 		SOURCE="vault"
 		SECRET=$(echo "${line}" | grep -Po "(?<=vault:\/\/).*(?=\[)")
 		CERT=$(fetch_from_hcvault "${SECRET}")
 		DOMAIN=$(openssl x509 -noout -dates -subject -in <(echo "$CERT") | awk '/subject=CN = /{split($0,s,"=");gsub(/ /,"",s[3]); print s[3]}')
-		# openssl x509 -noout -subject  -purpose -enddate -in c.pem
 	fi
 
 	if [ -z "$CERT" ]; then
@@ -73,8 +69,18 @@ for line in $(awk '/^(tls|vault):\/\//{print $1}' "${1}"); do
 	fi
 done
 
+echo $SLACK_WEBHOOK | grep -Po "^https://hooks.slack.com.*" &>/dev/null
+ERR=$?
+
+if [ $ERR -ne 0 ] ; then
+	echo >&2 "Please set SLACK_WEBHOOK"
+	exit 250
+fi
+
 if [ -n "$message" ]; then
 	message=$(echo -e "${message}" | column --table --table-columns SOURCE,SNI,NUMBEROFDAYSTOEXPIRE,THRESHOLD)
 	SLACK_MESSAGE="\`\`\`$message\`\`\`"
 	slack_notify "$SLACK_WEBHOOK"
+else
+	echo "No TLS certificate to expire, no message will be sent..."
 fi
